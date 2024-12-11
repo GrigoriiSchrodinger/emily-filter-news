@@ -3,6 +3,8 @@ from src.feature.gpt import GptRequest
 from src.feature.request.RequestHandler import RequestDataBase
 from src.logger import logger
 
+def str_to_bool(s):
+    return s.lower() in ("true", "yes")
 
 def process_message(message):
     try:
@@ -12,8 +14,8 @@ def process_message(message):
 
         recent_news = request_db.get_last_news()
         post_exists = recent_news and gpt_request.was_there_post(news_list=recent_news, news=message["content"])
-
-        if not recent_news or post_exists:
+        if not recent_news or str_to_bool(post_exists):
+            print(recent_news)
             request_db.create_news_queue(
                 channel=message["channel"],
                 post_id=message["id_post"]
