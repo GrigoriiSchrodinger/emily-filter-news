@@ -1,5 +1,5 @@
 from openai import OpenAI
-from src.conf import API_KEY, return_promt_was_there_post, return_promt_rate_post
+from src.conf import API_KEY, return_promt_was_there_post
 from src.logger import logger
 
 
@@ -38,12 +38,5 @@ class GptRequest(GptAPI):
         logger.debug(f"Делаем запрос gpt - на проверку поста")
         return self.create(
             prompt=return_promt_was_there_post().format(news_list=news_list),
-            user_message=news
-        )
-
-    def rate_post(self, news: str) -> str:
-        logger.debug(f"Делаем запрос gpt- на оценку")
-        return self.create(
-            prompt=return_promt_rate_post(),
             user_message=news
         )
