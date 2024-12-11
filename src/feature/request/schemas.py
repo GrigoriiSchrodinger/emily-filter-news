@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -6,19 +8,23 @@ class PostBase(BaseModel):
 
 
 class PostSendNews(PostBase):
-    texts: list[str]
+    seed: str
+    text: str
+    created_at: datetime
 
+class PostSendNewsList(PostBase):
+    send: list[PostSendNews]
 
-class PostSendQueue(PostBase):
-    texts: list[str]
+class PostQueue(PostBase):
+    seed: str
+    text: str
+    created_at: datetime
+
+class PostQueueList(PostBase):
+    queue: list[PostQueue]
 
 
 class CreateNewsQueue(PostBase):
     channel: str
     post_id: int
 
-
-class CreateNewsRate(PostBase):
-    channel: str
-    post_id: int
-    value: float

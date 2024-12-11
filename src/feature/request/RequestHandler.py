@@ -3,7 +3,7 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, ValidationError
 
-from src.feature.request.schemas import PostSendNews, PostSendQueue, CreateNewsQueue, CreateNewsRate
+from src.feature.request.schemas import CreateNewsQueue, PostSendNewsList, PostQueueList
 from src.logger import logger
 
 
@@ -50,13 +50,13 @@ class RequestHandler:
             # Обрабатываем ответ с использованием модели
             data = response.json() if response.headers.get('Content-Type') == 'application/json' else response.text
             logger.debug(f"Ответ - {data}")
-            return response_model.parse_obj(data) if response_model else data
+            return response.status_code, (response_model.parse_obj(data) if response_model else data)
         except requests.exceptions.RequestException as error:
             logger.exception("Произошла ошибка: %s", error)
-            return None
+            return None, None
         except ValidationError as error:
             logger.exception("Произошла ошибка: %s", error)
-            return None
+            return None, None
 
     def __post__(self, endpoint: str, data: Optional = None, response_model: Optional = None):
         """
@@ -105,33 +105,24 @@ class RequestHandler:
 
 
 class RequestDataBase(RequestHandler):
-    def __get_last_send_news__(self):
-        return self.__get__(endpoint='send-news', response_model=PostSendNews)
+    def __get_last_send_news__(self) -> [int, PostSendNewsList]:
+        return self.__get__(endpoint='send-news', response_model=PostSendNewsList)
 
-    def __get_last_queue__(self):
-        return self.__get__(endpoint='queue', response_model=PostSendQueue)
+    def __get_last_queue__(self) -> [int, PostQueueList]:
+        return self.__get__(endpoint='queue', response_model=PostQueueList)
 
     def __create_news_queue__(self, data: CreateNewsQueue):
         return self.__post__(endpoint='create-news-queue', data=data)
 
-    def __create_news_rate__(self, data: CreateNewsRate):
-        return self.__post__(endpoint='create-news-rate', data=data)
-
-    def create_news_rate_and_queue(self, channel: str, post_id: int, score_rate: float):
+    def create_news_queue(self, channel: str, post_id: int):
         queue = CreateNewsQueue(
             channel=channel,
             post_id=post_id
         )
-        rate = CreateNewsRate(
-            channel=channel,
-            post_id=post_id,
-            value=score_rate
-        )
         self.__create_news_queue__(data=queue)
-        self.__create_news_rate__(data=rate)
         return
 
     def get_last_news(self):
         send_news = self.__get_last_send_news__()
         queue = self.__get_last_queue__()
-        return send_news.texts + queue.texts
+        return send_news[1].send + queue[1].queue
