@@ -18,7 +18,10 @@ class RedisQueue:
         Отправляет данные в очередь
         """
         try:
-            logger.debug(f"Отправляем в очередь - {queue_name} | {json.loads(data)}")
+            logger.info("Отправка в очередь", extra={'tags': {
+                'queue': queue_name,
+                'data_length': len(data)
+            }})
             self.redis_conn.rpush(queue_name, data)
         except Exception as error:
             logger.exception("Произошла ошибка: %s", error)
@@ -29,6 +32,10 @@ class RedisQueue:
         Если блокировка включена, будет ждать до появления данных.
         """
         try:
+            logger.info("Ожидание сообщения из очереди", extra={'tags': {
+                'queue': queue_name,
+                'blocking': block
+            }})
             if block:
                 logger.debug(f"Ждем ответа очереди - {queue_name}")
                 item = self.redis_conn.blpop(queue_name, timeout=timeout)
@@ -36,6 +43,10 @@ class RedisQueue:
                 item = self.redis_conn.lpop(queue_name)
 
             if item:
+                logger.info("Успешно получено сообщение", extra={'tags': {
+                    'queue': queue_name,
+                    'message_size': len(item[1]) if item else 0
+                }})
                 logger.debug(f"Получили из очереди - {json.loads(item[1].decode('utf-8'))}")
                 return json.loads(item[1].decode('utf-8'))
             return None

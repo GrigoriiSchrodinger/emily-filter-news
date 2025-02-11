@@ -1,18 +1,19 @@
 from openai import OpenAI
-from src.conf import API_KEY, return_promt_was_there_post
+from src.conf import API_KEY, return_promt_was_there_post, BASE_URL, MODEL
 from src.logger import logger
 
 
 class GptAPI:
-    def __init__(self, api_key: str = API_KEY, model: str = "gpt-4o"):
+    def __init__(self, api_key: str = API_KEY, base_url: str = BASE_URL, model: str = MODEL):
         self.client = None
         self.api_key = api_key
         self.model = model
+        self.base_url = base_url
         self.initialize_client()
 
     def initialize_client(self):
         try:
-            self.client = OpenAI(api_key=self.api_key)
+            self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
         except Exception as error:
             logger.exception("Произошла ошибка: %s", error)
 
@@ -35,8 +36,13 @@ class GptAPI:
 
 class GptRequest(GptAPI):
     def was_there_post(self, news_list: list, news: str) -> str:
-        logger.debug(f"Делаем запрос gpt - на проверку поста")
-        return self.create(
+        logger.info("Запрос к GPT на проверку уникальности", extra={'tags': {
+            'news_length': len(news),
+            'news_list_count': len(news_list)
+        }})
+        result = self.create(
             prompt=return_promt_was_there_post().format(news_list=news_list),
             user_message=news
         )
+        logger.info("Ответ GPT получен", extra={'tags': {'gpt_response': result[:100] + '...'}})
+        return result

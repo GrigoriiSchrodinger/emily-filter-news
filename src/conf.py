@@ -1,10 +1,14 @@
 import os
 
+from dotenv import load_dotenv
+
 from src.feature.RedisManager import RedisQueue
 
 redis = RedisQueue(queue_name="processing", host="localhost", port=6379, db=0)
+load_dotenv()
 API_KEY = os.getenv('API_KEY')
-
+MODEL = os.getenv('MODEL')
+BASE_URL = os.getenv('BASE_URL')
 
 def return_promt_was_there_post():
     return """

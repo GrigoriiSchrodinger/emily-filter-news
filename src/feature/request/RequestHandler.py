@@ -8,7 +8,7 @@ from src.logger import logger
 
 
 class RequestHandler:
-    def __init__(self, base_url="http://0.0.0.0:8000/news", headers=None, timeout=10):
+    def __init__(self, base_url="http://0.0.0.0:8000/", headers=None, timeout=10):
         """
         Инициализация класса для работы с запросами.
 
@@ -106,13 +106,13 @@ class RequestHandler:
 
 class RequestDataBase(RequestHandler):
     def __get_last_send_news__(self) -> [int, PostSendNewsList]:
-        return self.__get__(endpoint='send-news', response_model=PostSendNewsList)
+        return self.__get__(endpoint='send-news/get-news/by/hours', response_model=PostSendNewsList)
 
     def __get_last_queue__(self) -> [int, PostQueueList]:
-        return self.__get__(endpoint='queue', response_model=PostQueueList)
+        return self.__get__(endpoint='queue/get-news/by/hours', response_model=PostQueueList)
 
     def __create_news_queue__(self, data: CreateNewsQueue):
-        return self.__post__(endpoint='create-news-queue', data=data)
+        return self.__post__(endpoint='queue/create', data=data)
 
     def create_news_queue(self, channel: str, post_id: int):
         queue = CreateNewsQueue(
@@ -123,6 +123,14 @@ class RequestDataBase(RequestHandler):
         return
 
     def get_last_news(self):
+        logger.info("Запрос последних отправленных новостей")
         send_news = self.__get_last_send_news__()
+        logger.info("Запрос последних новостей в очереди")
         queue = self.__get_last_queue__()
-        return send_news[1].send + queue[1].queue
+        
+        total_news = send_news[1].send + queue[1].queue
+        logger.info("Сборка общего списка новостей", extra={'tags': {
+            'send_news_count': len(send_news[1].send),
+            'queue_news_count': len(queue[1].queue)
+        }})
+        return total_news

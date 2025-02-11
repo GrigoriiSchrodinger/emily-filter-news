@@ -8,20 +8,33 @@ def str_to_bool(s):
 
 def process_message(message):
     try:
-        logger.debug(f"Получаем новость")
+        logger.info("Начало обработки сообщения", extra={'tags': {'message_id': message.get('id_post')}})
+        logger.debug(f"Получаем новость", extra={'tags': {'content': message["content"][:50] + '...'}})
+        
         request_db = RequestDataBase()
         gpt_request = GptRequest()
 
         recent_news = request_db.get_last_news()
+        logger.info(f"Получено {len(recent_news)} последних новостей", extra={'tags': {'news_count': len(recent_news)}})
+        
         post_exists = recent_news and gpt_request.was_there_post(news_list=recent_news, news=message["content"])
+        logger.debug(f"Результат проверки уникальности: {post_exists}", extra={'tags': {'post_exists': post_exists}})
+        
         if not recent_news or str_to_bool(post_exists):
-            print(recent_news)
+            logger.info("Создание новой очереди новостей", extra={'tags': {
+                'channel': message["channel"],
+                'post_id': message["id_post"]
+            }})
             request_db.create_news_queue(
                 channel=message["channel"],
                 post_id=message["id_post"]
             )
     except Exception as error:
-        logger.exception("Произошла ошибка: %s", error)
+        logger.critical("Критическая ошибка обработки", extra={'tags': {
+            'error_type': type(error).__name__,
+            'message_id': message.get('id_post')
+        }})
+        raise
 
 def main():
     try:
