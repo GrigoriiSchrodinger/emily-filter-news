@@ -32,6 +32,9 @@ jobs:
     - name: Deploy on remote server
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+          # Создаем директорию для деплоя, если она не существует
+          mkdir -p /path/to/deployment
+          
           # Создаем volume если его еще нет
           docker volume create ${{ github.event.repository.name }}_data || true
         
