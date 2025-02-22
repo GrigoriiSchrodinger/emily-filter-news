@@ -46,10 +46,13 @@ jobs:
           docker stop ${{ github.event.repository.name }} || true
           docker rm ${{ github.event.repository.name }} || true
           
+          # Создаем .env файл на сервере
+          echo "API_KEY=${{ secrets.API_KEY }}" > /path/to/deployment/.env
+          
           # Запускаем новый контейнер с подключенным volume и сетью
           docker run -d \
             --name ${{ github.event.repository.name }} \
-            -e API_KEY=${{ secrets.API_KEY }} \
+            --env-file /path/to/deployment/.env \
             -v ${{ github.event.repository.name }}_data:/app/data \
             --network app \
             ${{ github.event.repository.name }}:latest
