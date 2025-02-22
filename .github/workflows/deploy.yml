@@ -29,10 +29,6 @@ jobs:
       run: |
         docker save ${{ github.event.repository.name }}:latest | bzip2 | ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} 'bunzip2 | docker load'
 
-    - name: Transfer .env to remote server
-      run: |
-        scp -o StrictHostKeyChecking=no .env ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/path/to/deployment/.env
-
     - name: Deploy on remote server
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
