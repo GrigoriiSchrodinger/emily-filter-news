@@ -8,7 +8,7 @@ from src.logger import logger
 
 
 class RequestHandler:
-    def __init__(self, base_url="http://0.0.0.0:8000", headers=None, timeout=10):
+    def __init__(self, base_url="http://emily-database-handler:8000", headers=None, timeout=10):
         """
         Инициализация класса для работы с запросами.
 
