@@ -2,13 +2,11 @@ import os
 
 from dotenv import load_dotenv
 
-from src.feature.RedisManager import RedisQueue
-
-redis = RedisQueue(queue_name="processing", host="redis", port=6379, db=0)
 load_dotenv()
 API_KEY = os.getenv('API_KEY')
 MODEL = os.getenv('MODEL', "gpt-4o")
 BASE_URL = os.getenv('BASE_URL', "https://api.openai.com/v1")
+ENV = os.getenv('ENV', "localhost")
 
 def return_promt_was_there_post():
     return """
