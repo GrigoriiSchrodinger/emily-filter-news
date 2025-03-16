@@ -1,7 +1,8 @@
-from src.conf import redis
 from src.feature.gpt import GptRequest
 from src.feature.request.RequestHandler import RequestDataBase
 from src.logger import logger
+from src.service import redis
+
 
 def str_to_bool(s):
     return s.lower() in ("true", "yes")
