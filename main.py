@@ -36,7 +36,8 @@ def main():
     try:
         message = redis.receive_from_queue(queue_name="filter")
         if message and "content" in message and isinstance(message["content"], str):
-            process_message(message)
+            if len(message["content"]) > 90:
+                process_message(message)
     except Exception as error:
         logger.exception("Произошла ошибка: %s", error)
 
