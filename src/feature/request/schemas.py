@@ -6,7 +6,6 @@ from pydantic import BaseModel
 class PostBase(BaseModel):
     pass
 
-
 class PostSendNews(PostBase):
     seed: str
     text: str
@@ -27,4 +26,11 @@ class PostQueueList(PostBase):
 class CreateNewsQueue(PostBase):
     channel: str
     post_id: int
+
+class HasNews(BaseModel):
+    news_list: str
+    current_news: str
+
+class HasNewsResponse(BaseModel):
+    bool_text: str
 

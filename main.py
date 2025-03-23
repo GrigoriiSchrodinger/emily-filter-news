@@ -1,7 +1,5 @@
-from src.feature.gpt import GptRequest
-from src.feature.request.RequestHandler import RequestDataBase
 from src.logger import logger
-from src.service import redis
+from src.service import redis, gpt_handler, request_db
 
 
 def str_to_bool(s):
@@ -11,14 +9,11 @@ def process_message(message):
     try:
         logger.info("Начало обработки сообщения", extra={'tags': {'message_id': message.get('id_post')}})
         logger.debug(f"Получаем новость", extra={'tags': {'content': message["content"][:50] + '...'}})
-        
-        request_db = RequestDataBase()
-        gpt_request = GptRequest()
 
         recent_news = request_db.get_last_news()
         logger.info(f"Получено {len(recent_news)} последних новостей", extra={'tags': {'news_count': len(recent_news)}})
         
-        post_exists = recent_news and gpt_request.was_there_post(news_list=recent_news, news=message["content"])
+        post_exists = recent_news and gpt_handler.has_news(news_list=recent_news, current_news=message["content"])
         logger.debug(f"Результат проверки уникальности: {post_exists}", extra={'tags': {'post_exists': post_exists}})
         
         if not recent_news or str_to_bool(post_exists):

@@ -3,9 +3,9 @@ from typing import Optional
 import requests
 from pydantic import BaseModel, ValidationError
 
-from src.feature.request.schemas import CreateNewsQueue, PostSendNewsList, PostQueueList
+from src.feature.request.schemas import CreateNewsQueue, PostSendNewsList, PostQueueList, HasNewsResponse, HasNews
 from src.logger import logger
-from src.service_url import get_url_emily_database_handler
+from src.service_url import get_url_emily_database_handler, get_url_emily_gpt_handler
 
 
 class RequestHandler:
@@ -124,14 +124,65 @@ class RequestDataBase(RequestHandler):
         return
 
     def get_last_news(self):
-        logger.info("Запрос последних отправленных новостей")
+        """
+        Получает последние новости из отправленных и из очереди.
+        Форматирует их в удобный для чтения текст.
+        """
         send_news = self.__get_last_send_news__()
-        logger.info("Запрос последних новостей в очереди")
         queue = self.__get_last_queue__()
+
+        # Создаем список для хранения всех новостей
+        all_news = []
         
-        total_news = send_news[1].send + queue[1].queue
+        # Получаем новости из отправленных
+        sent_news_items = []
+        if send_news and len(send_news) > 1 and hasattr(send_news[1], 'send'):
+            sent_news_items = send_news[1].send
+        
+        # Получаем новости из очереди
+        queue_news_items = []
+        if queue and len(queue) > 1 and hasattr(queue[1], 'queue'):
+            queue_news_items = queue[1].queue
+            
+        # Объединяем все новости в один список
+        for news_item in sent_news_items:
+            if hasattr(news_item, 'seed') and hasattr(news_item, 'text'):
+                all_news.append((news_item.seed, news_item.text))
+                
+        for news_item in queue_news_items:
+            if hasattr(news_item, 'seed') and hasattr(news_item, 'text'):
+                all_news.append((news_item.seed, news_item.text))
+        
+        result = ""
+        for number, (seed, text) in enumerate(all_news, 1):
+            result += f"{number}) новость: \"{text}\".\n"
+        
+        sent_count = len(sent_news_items)
+        queue_count = len(queue_news_items)
+        
         logger.info("Сборка общего списка новостей", extra={'tags': {
-            'send_news_count': len(send_news[1].send),
-            'queue_news_count': len(queue[1].queue)
+            'send_news_count': sent_count,
+            'queue_news_count': queue_count
         }})
-        return total_news
+        return result
+
+class RequestGptHandler(RequestHandler):
+    def __init__(self, base_url=get_url_emily_gpt_handler(), timeout=120):
+        super().__init__(base_url=base_url, timeout=timeout)
+
+    def __has_news__(self, data: HasNews) -> HasNewsResponse:
+        return self.__post__(endpoint='text-handler/has-news', data=data)
+
+    def has_news(self, news_list: str, current_news: str) -> str:
+        """
+        Проверяет, содержится ли текущая новость в списке новостей.
+        
+        :param news_list: Список существующих новостей
+        :param current_news: Текущая новость для проверки
+        :return: Ответ с результатом проверки
+        """
+        data = HasNews(
+            news_list=news_list,
+            current_news=current_news
+        )
+        return self.__has_news__(data=data)["bool_text"]
