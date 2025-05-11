@@ -29,7 +29,6 @@ class RedisQueue:
     def receive_from_queue(self, queue_name, block=True, timeout=None):
         """
         Получает данные из очереди
-        Если блокировка включена, будет ждать до появления данных.
         """
         try:
             logger.info("Ожидание сообщения из очереди", extra={'tags': {
